@@ -1,17 +1,22 @@
 {
   "expo": {
-    "name": "hospital-app-fixed",
+    "name": "Gestion Patients",
     "slug": "hospital-app-fixed",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "projectId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "assets/icon.png",
+      "assets/adaptive-icon.png",
+      "assets/favicon.png"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -20,11 +25,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "package": "com.hospitalapp.gestionpatients",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "21ddebf9-83f9-44af-9cd4-214b09eb9257"
+      }
+    },
+    "owner": "feuble"
   }
 }
