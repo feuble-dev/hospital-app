@@ -177,32 +177,55 @@ function PatientForm({ onSubmit, onCancel }: { onSubmit: () => void; onCancel: (
   };
 
   return (
-    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
-      <Text style={styles.formTitle}>Nouveau patient</Text>
+    <ScrollView 
+      style={styles.formContainer} 
+      contentContainerStyle={styles.formContentContainer}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.formHeader}>
+        <Text style={styles.formHeaderIcon}>👤</Text>
+        <Text style={styles.formTitle}>Nouveau patient</Text>
+      </View>
       
-      <View style={styles.formRow}>
-        <TextInput
-          style={[styles.formInput, { flex: 1 }]}
-          placeholder="Nom *"
-          placeholderTextColor="#9ca3af"
-          value={nom}
-          onChangeText={setNom}
-        />
-        <TextInput
-          style={[styles.formInput, { flex: 1 }]}
-          placeholder="Prénom *"
-          placeholderTextColor="#9ca3af"
-          value={prenom}
-          onChangeText={setPrenom}
-        />
+      {/* Section Identité */}
+      <View style={styles.formSection}>
+        <Text style={styles.sectionLabel}>📋 Identité</Text>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Nom *</Text>
+          <TextInput
+            style={styles.formInput}
+            placeholder="Dupont"
+            placeholderTextColor="#9ca3af"
+            value={nom}
+            onChangeText={setNom}
+            autoCapitalize="words"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Prénom *</Text>
+          <TextInput
+            style={styles.formInput}
+            placeholder="Marie"
+            placeholderTextColor="#9ca3af"
+            value={prenom}
+            onChangeText={setPrenom}
+            autoCapitalize="words"
+          />
+        </View>
       </View>
 
-      <View style={styles.formRow}>
-        {/* Sélecteur de date de naissance */}
-        <View style={[styles.dateContainer, { flex: 1 }]}>
-          <Text style={styles.dateLabel}>Date de naissance</Text>
+      {/* Section Informations personnelles */}
+      <View style={styles.formSection}>
+        <Text style={styles.sectionLabel}>📅 Informations personnelles</Text>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Date de naissance</Text>
           <Pressable style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <Text style={styles.dateButtonText}>📅 {formatDate(dateNaissance)}</Text>
+            <Text style={styles.dateIcon}>📅</Text>
+            <Text style={styles.dateButtonText}>{formatDate(dateNaissance)}</Text>
           </Pressable>
           {showDatePicker && (
             <DateTimePicker
@@ -215,55 +238,68 @@ function PatientForm({ onSubmit, onCancel }: { onSubmit: () => void; onCancel: (
           )}
         </View>
 
-        {/* Sélecteur de sexe */}
-        <View style={[styles.sexContainer, { flex: 1 }]}>
-          <Text style={styles.sexLabel}>Sexe</Text>
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Sexe</Text>
           <View style={styles.sexButtons}>
             <Pressable
               style={[styles.sexButton, sexe === 'M' && styles.sexButtonSelected]}
               onPress={() => setSexe('M')}
             >
+              <Text style={styles.sexButtonIcon}>👨</Text>
               <Text style={[styles.sexButtonText, sexe === 'M' && styles.sexButtonTextSelected]}>
-                👨 Homme
+                Homme
               </Text>
             </Pressable>
             <Pressable
               style={[styles.sexButton, sexe === 'F' && styles.sexButtonSelected]}
               onPress={() => setSexe('F')}
             >
+              <Text style={styles.sexButtonIcon}>👩</Text>
               <Text style={[styles.sexButtonText, sexe === 'F' && styles.sexButtonTextSelected]}>
-                👩 Femme
+                Femme
               </Text>
             </Pressable>
           </View>
         </View>
       </View>
 
-      <TextInput
-        style={styles.formInput}
-        placeholder="Adresse"
-        placeholderTextColor="#9ca3af"
-        value={adresse}
-        onChangeText={setAdresse}
-        multiline
-        numberOfLines={2}
-      />
+      {/* Section Contact */}
+      <View style={styles.formSection}>
+        <Text style={styles.sectionLabel}>📞 Contact</Text>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Téléphone</Text>
+          <TextInput
+            style={styles.formInput}
+            placeholder="06 12 34 56 78"
+            placeholderTextColor="#9ca3af"
+            value={telephone}
+            onChangeText={setTelephone}
+            keyboardType="phone-pad"
+          />
+        </View>
 
-      <TextInput
-        style={styles.formInput}
-        placeholder="Téléphone"
-        placeholderTextColor="#9ca3af"
-        value={telephone}
-        onChangeText={setTelephone}
-        keyboardType="phone-pad"
-      />
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Adresse</Text>
+          <TextInput
+            style={[styles.formInput, styles.textArea]}
+            placeholder="12 Rue des Fleurs, 75001 Paris"
+            placeholderTextColor="#9ca3af"
+            value={adresse}
+            onChangeText={setAdresse}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+          />
+        </View>
+      </View>
 
       <View style={styles.formButtons}>
         <Pressable style={[styles.formBtn, styles.cancelBtn]} onPress={onCancel}>
           <Text style={styles.cancelBtnText}>Annuler</Text>
         </Pressable>
         <Pressable style={[styles.formBtn, styles.submitBtn]} onPress={handleSubmit}>
-          <Text style={styles.submitBtnText}>Ajouter</Text>
+          <Text style={styles.submitBtnText}>Ajouter le patient</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -276,109 +312,222 @@ const createStyles = (colors: any) => StyleSheet.create({
   searchInput: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.text,
+    fontSize: 16,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   addBtn: {
     backgroundColor: colors.primary,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  addBtnText: { color: colors.surface, fontSize: 24, fontWeight: 'bold' },
-  listContainer: { paddingHorizontal: 16 },
+  addBtnText: { color: '#ffffff', fontSize: 28, fontWeight: 'bold' },
+  listContainer: { paddingHorizontal: 16, paddingBottom: 16 },
   patientCard: {
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 1,
+    elevation: 3,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   patientInfo: { flex: 1 },
-  patientName: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 4 },
-  patientDetails: { fontSize: 14, color: colors.textSecondary },
+  patientName: { fontSize: 18, fontWeight: '800', color: colors.text, marginBottom: 6, letterSpacing: -0.3 },
+  patientDetails: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   deleteBtn: {
     backgroundColor: '#ef4444',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#ef4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  deleteBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  deleteBtnText: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
   emptyContainer: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { fontSize: 16, color: '#9ca3af', fontStyle: 'italic' },
   formContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     margin: 16,
+    borderRadius: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxHeight: '90%',
+  },
+  formContentContainer: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  formHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  formHeaderIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  formTitle: { 
+    fontSize: 24, 
+    fontWeight: '900', 
+    color: colors.text, 
+    letterSpacing: -0.5 
+  },
+  
+  // Sections du formulaire
+  formSection: {
+    marginBottom: 20,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+    letterSpacing: -0.2,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  formInput: {
+    backgroundColor: '#f8fafc',
+    borderColor: colors.border,
+    borderWidth: 1,
     borderRadius: 12,
     padding: 16,
-    elevation: 2,
+    color: colors.text,
+    fontSize: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.03,
     shadowRadius: 2,
+    elevation: 1,
   },
-  formTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 },
-  formRow: { flexDirection: 'row', gap: 12 },
-  formInput: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e5e7eb',
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+    paddingTop: 12,
+  },
+  
+  formButtons: { flexDirection: 'row', gap: 14, marginTop: 20 },
+  formBtn: { flex: 1, paddingVertical: 16, borderRadius: 14, alignItems: 'center' },
+  cancelBtn: { 
+    backgroundColor: '#f1f5f9',
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    color: '#111827',
+    borderColor: colors.border,
   },
-  formButtons: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  formBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  cancelBtn: { backgroundColor: '#f3f4f6' },
-  cancelBtnText: { color: '#374151', fontWeight: '600' },
-  submitBtn: { backgroundColor: '#2563eb' },
-  submitBtnText: { color: '#fff', fontWeight: '600' },
+  cancelBtnText: { color: colors.textSecondary, fontWeight: '700', fontSize: 16 },
+  submitBtn: { 
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  submitBtnText: { color: '#ffffff', fontWeight: '800', fontSize: 16 },
   
   // Styles pour le sélecteur de date
-  dateContainer: { marginBottom: 12 },
-  dateLabel: { fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '600' },
   dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  dateButtonText: { fontSize: 16, color: '#1e293b', fontWeight: '500' },
+  dateIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  dateButtonText: { fontSize: 16, color: colors.text, fontWeight: '600', flex: 1 },
   
   // Styles pour le sélecteur de sexe
-  sexContainer: { marginBottom: 12 },
-  sexLabel: { fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '600' },
-  sexButtons: { flexDirection: 'row', gap: 8 },
+  sexButtons: { flexDirection: 'row', gap: 10 },
   sexButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
   sexButtonSelected: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  sexButtonText: { fontSize: 14, color: '#64748b', fontWeight: '500' },
-  sexButtonTextSelected: { color: '#fff', fontWeight: '600' },
+  sexButtonIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  sexButtonText: { fontSize: 15, color: colors.textSecondary, fontWeight: '600' },
+  sexButtonTextSelected: { color: '#ffffff', fontWeight: '700' },
 });

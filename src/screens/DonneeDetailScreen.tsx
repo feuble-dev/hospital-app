@@ -117,21 +117,20 @@ export default function DonneeDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: '#f0f4f8'
   },
   scrollView: {
     flex: 1
   },
   header: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    padding: 24,
+    borderBottomWidth: 0,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 6
   },
   backButton: {
     marginBottom: 12
@@ -142,22 +141,23 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1e293b'
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#0f172a',
+    letterSpacing: -0.5
   },
   patientCard: {
     backgroundColor: '#fff',
     margin: 16,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
     borderWidth: 1,
-    borderColor: '#f1f5f9'
+    borderColor: '#e2e8f0'
   },
   sectionTitle: {
     fontSize: 16,
@@ -174,15 +174,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 6,
     borderWidth: 1,
-    borderColor: '#f1f5f9'
+    borderColor: '#e2e8f0'
   },
   iconHeader: {
     flexDirection: 'row',
@@ -197,15 +197,17 @@ const styles = StyleSheet.create({
     flex: 1
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0f172a',
+    marginBottom: 6,
+    letterSpacing: -0.3
   },
   cardSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#64748b',
-    fontWeight: '500'
+    fontWeight: '600',
+    lineHeight: 22
   },
   infoGrid: {
     gap: 16

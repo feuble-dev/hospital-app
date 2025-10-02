@@ -5,6 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { query, run } from '../db';
 import AttachmentManager from '../components/AttachmentManager';
+import TypePicker from '../components/TypePicker';
 import { useTheme } from '../contexts/ThemeContext';
 
 type TabType = 'donnees' | 'consultations' | 'examens';
@@ -526,7 +527,7 @@ function DonneeForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
   const { colors } = useTheme();
   const styles = createStyles(colors);
   
-  const [typeDonneeId, setTypeDonneeId] = useState(editingItem ? String(editingItem.type_donnee_id) : '1');
+  const [typeDonneeId, setTypeDonneeId] = useState<number | null>(editingItem ? editingItem.type_donnee_id : null);
   const [valeur, setValeur] = useState(editingItem ? editingItem.valeur : '');
   const [dateEnregistrement, setDateEnregistrement] = useState(() => {
     if (editingItem && editingItem.date_enregistrement) {
@@ -557,6 +558,11 @@ function DonneeForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
   };
 
   const handleSubmit = async () => {
+    if (!typeDonneeId) {
+      Alert.alert('Erreur', 'Veuillez sélectionner un type de donnée');
+      return;
+    }
+    
     if (!valeur.trim()) {
       Alert.alert('Champ requis', 'Veuillez saisir une valeur.');
       return;
@@ -565,12 +571,12 @@ function DonneeForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
       if (editingItem) {
         // Mode édition
         await run('UPDATE donnees_sanitaires SET type_donnee_id=?, valeur=?, date_enregistrement=? WHERE donnee_id=?', 
-          [parseInt(typeDonneeId), valeur.trim(), formatDate(dateEnregistrement), editingItem.donnee_id]);
+          [typeDonneeId, valeur.trim(), formatDate(dateEnregistrement), editingItem.donnee_id]);
         Alert.alert('Succès', 'Donnée modifiée avec succès');
       } else {
         // Mode création
         await run('INSERT INTO donnees_sanitaires (patient_id, type_donnee_id, valeur, date_enregistrement) VALUES (?, ?, ?, ?)', 
-          [patientId, parseInt(typeDonneeId), valeur.trim(), formatDate(dateEnregistrement)]);
+          [patientId, typeDonneeId, valeur.trim(), formatDate(dateEnregistrement)]);
         Alert.alert('Succès', 'Donnée ajoutée avec succès');
       }
       onSubmit();
@@ -583,28 +589,25 @@ function DonneeForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
     <View style={styles.formContainer}>
       <Text style={styles.formTitle}>{editingItem ? 'Modifier la donnée sanitaire' : 'Nouvelle donnée sanitaire'}</Text>
       
-      <View style={styles.pickerContainer}>
-        <Text style={styles.label}>Type:</Text>
-        {types.map(type => (
-          <Pressable
-            key={type.type_donnee_id}
-            style={[styles.pickerItem, typeDonneeId === String(type.type_donnee_id) && styles.pickerItemSelected]}
-            onPress={() => setTypeDonneeId(String(type.type_donnee_id))}
-          >
-            <Text style={[styles.pickerText, typeDonneeId === String(type.type_donnee_id) && styles.pickerTextSelected]}>
-              {type.nom_type}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <TextInput
-        style={styles.formInput}
-        placeholder="Valeur (ex: A+, 70kg, 175cm)"
-        placeholderTextColor="#9ca3af"
-        value={valeur}
-        onChangeText={setValeur}
+      <TypePicker
+        label="Type de donnée"
+        value={typeDonneeId}
+        items={types.map(t => ({ id: t.type_donnee_id, nom_type: t.nom_type, description: t.description }))}
+        onValueChange={setTypeDonneeId}
+        placeholder="Sélectionner un type"
+        icon="📊"
       />
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Valeur *</Text>
+        <TextInput
+          style={styles.formInput}
+          placeholder="Valeur (ex: A+, 70kg, 175cm)"
+          placeholderTextColor="#9ca3af"
+          value={valeur}
+          onChangeText={setValeur}
+        />
+      </View>
       
       {/* Sélecteur de date */}
       <View style={styles.dateContainer}>
@@ -640,8 +643,9 @@ function ConsultationForm({ patientId, editingItem, onSubmit, onCancel }: { pati
   const { colors } = useTheme();
   const styles = createStyles(colors);
   
-  const [typeConsultationId, setTypeConsultationId] = useState(editingItem ? String(editingItem.type_consultation_id) : '1');
-  const [notes, setNotes] = useState(editingItem ? editingItem.notes || '' : '');
+  const [typeConsultationId, setTypeConsultationId] = useState<number | null>(editingItem ? editingItem.type_consultation_id : null);
+  const [diagnostic, setDiagnostic] = useState(editingItem ? editingItem.diagnostic || '' : '');
+  const [traitement, setTraitement] = useState(editingItem ? editingItem.traitement || '' : '');
   const [dateConsultation, setDateConsultation] = useState(() => {
     if (editingItem && editingItem.date_consultation) {
       const date = new Date(editingItem.date_consultation);
@@ -671,16 +675,26 @@ function ConsultationForm({ patientId, editingItem, onSubmit, onCancel }: { pati
   };
 
   const handleSubmit = async () => {
+    if (!typeConsultationId) {
+      Alert.alert('Erreur', 'Veuillez sélectionner un type de consultation');
+      return;
+    }
+    
+    if (!diagnostic.trim()) {
+      Alert.alert('Erreur', 'Veuillez saisir un diagnostic');
+      return;
+    }
+    
     try {
       if (editingItem) {
         // Mode édition
-        await run('UPDATE consultations SET type_consultation_id=?, date_consultation=?, notes=? WHERE consultation_id=?', 
-          [parseInt(typeConsultationId), formatDate(dateConsultation), notes.trim() || null, editingItem.consultation_id]);
+        await run('UPDATE consultations SET type_consultation_id=?, date_consultation=?, diagnostic=?, traitement=? WHERE consultation_id=?', 
+          [typeConsultationId, formatDate(dateConsultation), diagnostic.trim(), traitement.trim() || null, editingItem.consultation_id]);
         Alert.alert('Succès', 'Consultation modifiée avec succès');
       } else {
         // Mode création
-        await run('INSERT INTO consultations (patient_id, type_consultation_id, date_consultation, notes) VALUES (?, ?, ?, ?)', 
-          [patientId, parseInt(typeConsultationId), formatDate(dateConsultation), notes.trim() || null]);
+        await run('INSERT INTO consultations (patient_id, type_consultation_id, date_consultation, diagnostic, traitement) VALUES (?, ?, ?, ?, ?)', 
+          [patientId, typeConsultationId, formatDate(dateConsultation), diagnostic.trim(), traitement.trim() || null]);
         Alert.alert('Succès', 'Consultation ajoutée avec succès');
       }
       onSubmit();
@@ -693,20 +707,14 @@ function ConsultationForm({ patientId, editingItem, onSubmit, onCancel }: { pati
     <View style={styles.formContainer}>
       <Text style={styles.formTitle}>{editingItem ? 'Modifier la consultation' : 'Nouvelle consultation'}</Text>
       
-      <View style={styles.pickerContainer}>
-        <Text style={styles.label}>Type:</Text>
-        {types.map(type => (
-          <Pressable
-            key={type.type_consultation_id}
-            style={[styles.pickerItem, typeConsultationId === String(type.type_consultation_id) && styles.pickerItemSelected]}
-            onPress={() => setTypeConsultationId(String(type.type_consultation_id))}
-          >
-            <Text style={[styles.pickerText, typeConsultationId === String(type.type_consultation_id) && styles.pickerTextSelected]}>
-              {type.nom_type}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <TypePicker
+        label="Type de consultation"
+        value={typeConsultationId}
+        items={types.map(t => ({ id: t.type_consultation_id, nom_type: t.nom_type, description: t.description }))}
+        onValueChange={setTypeConsultationId}
+        placeholder="Sélectionner un type"
+        icon="🩺"
+      />
 
       {/* Sélecteur de date */}
       <View style={styles.dateContainer}>
@@ -725,15 +733,33 @@ function ConsultationForm({ patientId, editingItem, onSubmit, onCancel }: { pati
         )}
       </View>
 
-      <TextInput
-        style={styles.formInput}
-        placeholder="Notes de consultation..."
-        placeholderTextColor="#9ca3af"
-        value={notes}
-        onChangeText={setNotes}
-        multiline
-        numberOfLines={4}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Diagnostic *</Text>
+        <TextInput
+          style={[styles.formInput, styles.textArea]}
+          placeholder="Diagnostic du patient..."
+          placeholderTextColor="#9ca3af"
+          value={diagnostic}
+          onChangeText={setDiagnostic}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Traitement</Text>
+        <TextInput
+          style={[styles.formInput, styles.textArea]}
+          placeholder="Traitement prescrit..."
+          placeholderTextColor="#9ca3af"
+          value={traitement}
+          onChangeText={setTraitement}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </View>
       
       <View style={styles.formButtons}>
         <Pressable style={[styles.formBtn, styles.cancelBtn]} onPress={onCancel}>
@@ -752,7 +778,7 @@ function ExamenForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
   const { colors } = useTheme();
   const styles = createStyles(colors);
   
-  const [typeExamenId, setTypeExamenId] = useState(editingItem ? String(editingItem.type_examen_id) : '1');
+  const [typeExamenId, setTypeExamenId] = useState<number | null>(editingItem ? editingItem.type_examen_id : null);
   const [objetExamen, setObjetExamen] = useState(editingItem ? editingItem.objet_examen || '' : '');
   const [resultat, setResultat] = useState(editingItem ? editingItem.resultat || '' : '');
   const [notes, setNotes] = useState(editingItem ? editingItem.notes || '' : '');
@@ -785,16 +811,21 @@ function ExamenForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
   };
 
   const handleSubmit = async () => {
+    if (!typeExamenId) {
+      Alert.alert('Erreur', 'Veuillez sélectionner un type d\'examen');
+      return;
+    }
+    
     try {
       if (editingItem) {
         // Mode édition
         await run('UPDATE examens SET type_examen_id=?, objet_examen=?, date_examen=?, resultat=?, notes=? WHERE examen_id=?', 
-          [parseInt(typeExamenId), objetExamen.trim() || null, formatDate(dateExamen), resultat.trim() || null, notes.trim() || null, editingItem.examen_id]);
+          [typeExamenId, objetExamen.trim() || null, formatDate(dateExamen), resultat.trim() || null, notes.trim() || null, editingItem.examen_id]);
         Alert.alert('Succès', 'Examen modifié avec succès');
       } else {
         // Mode création
         await run('INSERT INTO examens (patient_id, type_examen_id, objet_examen, date_examen, resultat, notes) VALUES (?, ?, ?, ?, ?, ?)', 
-          [patientId, parseInt(typeExamenId), objetExamen.trim() || null, formatDate(dateExamen), resultat.trim() || null, notes.trim() || null]);
+          [patientId, typeExamenId, objetExamen.trim() || null, formatDate(dateExamen), resultat.trim() || null, notes.trim() || null]);
         Alert.alert('Succès', 'Examen ajouté avec succès');
       }
       onSubmit();
@@ -807,28 +838,25 @@ function ExamenForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
     <View style={styles.formContainer}>
       <Text style={styles.formTitle}>{editingItem ? 'Modifier l\'examen' : 'Nouvel examen'}</Text>
       
-      <View style={styles.pickerContainer}>
-        <Text style={styles.label}>Type:</Text>
-        {types.map(type => (
-          <Pressable
-            key={type.type_examen_id}
-            style={[styles.pickerItem, typeExamenId === String(type.type_examen_id) && styles.pickerItemSelected]}
-            onPress={() => setTypeExamenId(String(type.type_examen_id))}
-          >
-            <Text style={[styles.pickerText, typeExamenId === String(type.type_examen_id) && styles.pickerTextSelected]}>
-              {type.nom_type}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <TextInput
-        style={styles.formInput}
-        placeholder="Objet de l'examen (ex: Contrôle annuel, Suivi...)"
-        placeholderTextColor="#9ca3af"
-        value={objetExamen}
-        onChangeText={setObjetExamen}
+      <TypePicker
+        label="Type d'examen"
+        value={typeExamenId}
+        items={types.map(t => ({ id: t.type_examen_id, nom_type: t.nom_type, description: t.description }))}
+        onValueChange={setTypeExamenId}
+        placeholder="Sélectionner un type"
+        icon="🔬"
       />
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Objet de l'examen</Text>
+        <TextInput
+          style={styles.formInput}
+          placeholder="Contrôle annuel, Suivi post-opératoire..."
+          placeholderTextColor="#9ca3af"
+          value={objetExamen}
+          onChangeText={setObjetExamen}
+        />
+      </View>
 
       {/* Sélecteur de date */}
       <View style={styles.dateContainer}>
@@ -847,25 +875,33 @@ function ExamenForm({ patientId, editingItem, onSubmit, onCancel }: { patientId:
         )}
       </View>
 
-      <TextInput
-        style={styles.formInput}
-        placeholder="Résultat de l'examen..."
-        placeholderTextColor="#9ca3af"
-        value={resultat}
-        onChangeText={setResultat}
-        multiline
-        numberOfLines={3}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Résultat</Text>
+        <TextInput
+          style={[styles.formInput, styles.textArea]}
+          placeholder="Résultat de l'examen..."
+          placeholderTextColor="#9ca3af"
+          value={resultat}
+          onChangeText={setResultat}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </View>
       
-      <TextInput
-        style={styles.formInput}
-        placeholder="Notes complémentaires..."
-        placeholderTextColor="#9ca3af"
-        value={notes}
-        onChangeText={setNotes}
-        multiline
-        numberOfLines={3}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Notes complémentaires</Text>
+        <TextInput
+          style={[styles.formInput, styles.textArea]}
+          placeholder="Notes additionnelles..."
+          placeholderTextColor="#9ca3af"
+          value={notes}
+          onChangeText={setNotes}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
+      </View>
       
       <View style={styles.formButtons}>
         <Pressable style={[styles.formBtn, styles.cancelBtn]} onPress={onCancel}>
@@ -886,31 +922,31 @@ const createStyles = (colors: any) => StyleSheet.create({
   scrollView: { flex: 1 },
   
   // En-tête patient
-  header: { backgroundColor: '#fff', padding: 20, marginBottom: 16, borderRadius: 16, margin: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  patientHeaderMain: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  patientName: { fontSize: 24, fontWeight: '800', color: '#1e293b', flex: 1 },
+  header: { backgroundColor: '#fff', padding: 24, marginBottom: 16, borderRadius: 24, margin: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  patientHeaderMain: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  patientName: { fontSize: 28, fontWeight: '900', color: '#0f172a', flex: 1, letterSpacing: -0.5 },
   patientHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  ageContainer: { backgroundColor: '#3b82f6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  ageText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  editPatientBtn: { backgroundColor: '#f59e0b', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', shadowColor: '#f59e0b', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3, elevation: 3 },
+  ageContainer: { backgroundColor: '#6366f1', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, shadowColor: '#6366f1', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 },
+  ageText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+  editPatientBtn: { backgroundColor: '#f59e0b', width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', shadowColor: '#f59e0b', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 6, elevation: 6 },
   editPatientBtnText: { fontSize: 16 },
   patientInfo: { color: '#64748b', fontSize: 16, fontWeight: '500', marginBottom: 4 },
   patientAddress: { color: '#64748b', fontSize: 14, fontStyle: 'italic' },
   
   // Statistiques
-  statsCard: { backgroundColor: '#fff', margin: 16, padding: 20, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  statsTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 16, textAlign: 'center' },
+  statsCard: { backgroundColor: '#fff', margin: 16, padding: 24, borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 6, borderWidth: 1, borderColor: '#f1f5f9' },
+  statsTitle: { fontSize: 20, fontWeight: '800', color: '#0f172a', marginBottom: 20, textAlign: 'center', letterSpacing: -0.3 },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-around' },
   statItem: { alignItems: 'center' },
-  statNumber: { fontSize: 28, fontWeight: '800', color: '#3b82f6', marginBottom: 4 },
-  statLabel: { fontSize: 12, color: '#64748b', fontWeight: '600', textTransform: 'uppercase' },
+  statNumber: { fontSize: 32, fontWeight: '900', color: '#6366f1', marginBottom: 6 },
+  statLabel: { fontSize: 13, color: '#64748b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   
   // Onglets
-  tabBar: { flexDirection: 'row', backgroundColor: '#fff', margin: 16, borderRadius: 12, padding: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
-  tab: { flex: 1, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center' },
-  activeTab: { backgroundColor: '#3b82f6' },
-  tabText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
-  activeTabText: { color: '#fff' },
+  tabBar: { flexDirection: 'row', backgroundColor: '#fff', margin: 16, borderRadius: 16, padding: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: '#e2e8f0' },
+  tab: { flex: 1, paddingVertical: 14, paddingHorizontal: 12, borderRadius: 12, alignItems: 'center' },
+  activeTab: { backgroundColor: '#6366f1', shadowColor: '#6366f1', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 },
+  tabText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  activeTabText: { color: '#fff', fontWeight: '800' },
   
   // Contenu
   tabContent: { padding: 16 },
@@ -918,15 +954,15 @@ const createStyles = (colors: any) => StyleSheet.create({
   
   // Section header
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  addBtn: { backgroundColor: '#3b82f6', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 },
-  addBtnText: { color: '#fff', fontSize: 24, fontWeight: '600' },
+  addBtn: { backgroundColor: '#6366f1', width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', shadowColor: '#6366f1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 6 },
+  addBtnText: { color: '#fff', fontSize: 28, fontWeight: '700' },
   
   // Cards
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+  card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 14, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: '#f1f5f9' },
   cardContent: { flex: 1 },
-  itemTitle: { fontSize: 16, fontWeight: '600', color: '#1e293b', marginBottom: 4 },
-  itemSub: { fontSize: 14, color: '#64748b', marginBottom: 2 },
-  viewDetailText: { fontSize: 12, color: '#3b82f6', fontWeight: '500', marginTop: 4 },
+  itemTitle: { fontSize: 17, fontWeight: '700', color: '#0f172a', marginBottom: 6, letterSpacing: -0.2 },
+  itemSub: { fontSize: 14, color: '#64748b', marginBottom: 3, lineHeight: 20 },
+  viewDetailText: { fontSize: 13, color: '#6366f1', fontWeight: '700', marginTop: 6 },
   cardActions: { flexDirection: 'row', gap: 8 },
   editBtn: { backgroundColor: '#f59e0b', width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   editBtnText: { fontSize: 14 },
@@ -935,9 +971,11 @@ const createStyles = (colors: any) => StyleSheet.create({
   emptyText: { textAlign: 'center', color: '#94a3b8', fontSize: 16, fontStyle: 'italic', marginTop: 20 },
   
   // Formulaires
-  formContainer: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  formTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 16, textAlign: 'center' },
-  formInput: { backgroundColor: '#f8fafc', borderColor: '#e2e8f0', borderWidth: 1, borderRadius: 12, padding: 16, fontSize: 16, color: '#1e293b', marginBottom: 12 },
+  formContainer: { backgroundColor: '#fff', borderRadius: 20, padding: 24, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 8, borderWidth: 1, borderColor: '#e2e8f0' },
+  formTitle: { fontSize: 20, fontWeight: '800', color: '#0f172a', marginBottom: 20, textAlign: 'center', letterSpacing: -0.3 },
+  formInput: { backgroundColor: '#f8fafc', borderColor: '#e2e8f0', borderWidth: 1, borderRadius: 12, padding: 16, fontSize: 16, color: '#0f172a', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 2, elevation: 1 },
+  inputContainer: { marginBottom: 16 },
+  textArea: { minHeight: 100, textAlignVertical: 'top', paddingTop: 12 },
   
   // Picker
   pickerContainer: { marginBottom: 12 },
@@ -954,12 +992,12 @@ const createStyles = (colors: any) => StyleSheet.create({
   dateButtonText: { fontSize: 16, color: '#1e293b', fontWeight: '500' },
   
   // Form buttons
-  formButtons: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  formBtn: { flex: 1, paddingVertical: 14, paddingHorizontal: 20, borderRadius: 12, alignItems: 'center' },
+  formButtons: { flexDirection: 'row', gap: 14, marginTop: 12 },
+  formBtn: { flex: 1, paddingVertical: 16, paddingHorizontal: 24, borderRadius: 14, alignItems: 'center' },
   cancelBtn: { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0', borderWidth: 1 },
-  cancelBtnText: { color: '#64748b', fontWeight: '600', fontSize: 16 },
-  submitBtn: { backgroundColor: '#3b82f6', shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 },
-  submitBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  cancelBtnText: { color: '#64748b', fontWeight: '700', fontSize: 16 },
+  submitBtn: { backgroundColor: '#6366f1', shadowColor: '#6366f1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 6 },
+  submitBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
   
   // Sélecteur de sexe
   sexeContainer: { flexDirection: 'row', gap: 8 },

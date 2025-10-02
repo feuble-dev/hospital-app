@@ -19,11 +19,11 @@ interface ThemeColors {
 }
 
 const lightTheme: ThemeColors = {
-  background: '#f8fafc',
+  background: '#f0f4f8',
   surface: '#ffffff',
-  primary: '#3b82f6',
-  secondary: '#64748b',
-  text: '#1e293b',
+  primary: '#6366f1',
+  secondary: '#8b5cf6',
+  text: '#0f172a',
   textSecondary: '#64748b',
   border: '#e2e8f0',
   card: '#ffffff',
@@ -36,8 +36,8 @@ const lightTheme: ThemeColors = {
 const darkTheme: ThemeColors = {
   background: '#0f172a',
   surface: '#1e293b',
-  primary: '#60a5fa',
-  secondary: '#94a3b8',
+  primary: '#818cf8',
+  secondary: '#a78bfa',
   text: '#f1f5f9',
   textSecondary: '#94a3b8',
   border: '#334155',

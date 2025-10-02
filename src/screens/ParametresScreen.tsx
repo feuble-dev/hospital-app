@@ -357,23 +357,23 @@ const createStyles = (colors: any) => StyleSheet.create({
   scrollView: { flex: 1 },
   
   // En-tête
-  header: { backgroundColor: colors.surface, padding: 20, marginBottom: 16, borderRadius: 16, margin: 16, shadowColor: colors.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: 8 },
-  subtitle: { fontSize: 16, color: colors.textSecondary, fontWeight: '500' },
+  header: { backgroundColor: colors.surface, padding: 24, marginBottom: 16, borderRadius: 24, margin: 16, marginTop: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8, borderWidth: 1, borderColor: colors.border },
+  title: { fontSize: 32, fontWeight: '900', color: colors.text, marginBottom: 4, letterSpacing: -0.5 },
+  subtitle: { fontSize: 16, color: colors.textSecondary, fontWeight: '600', opacity: 0.8 },
   
   // Menu
   menuContainer: { marginHorizontal: 16, marginBottom: 16 },
-  menuItem: { backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: colors.border },
-  activeMenuItem: { backgroundColor: colors.primary, borderColor: colors.primary },
-  menuText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  activeMenuText: { color: colors.surface },
+  menuItem: { backgroundColor: colors.surface, paddingHorizontal: 20, paddingVertical: 14, borderRadius: 24, marginRight: 10, borderWidth: 1, borderColor: colors.border, shadowColor: colors.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  activeMenuItem: { backgroundColor: colors.primary, borderColor: colors.primary, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 },
+  menuText: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+  activeMenuText: { color: '#ffffff', fontWeight: '800' },
   
   // Sections
-  section: { backgroundColor: colors.surface, margin: 16, borderRadius: 16, padding: 20, shadowColor: colors.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  addBtn: { backgroundColor: colors.primary, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  addBtnText: { color: colors.surface, fontSize: 18, fontWeight: '600' },
+  section: { backgroundColor: colors.surface, margin: 16, borderRadius: 20, padding: 24, shadowColor: colors.shadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 6, borderWidth: 1, borderColor: colors.border },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: -0.3 },
+  addBtn: { backgroundColor: colors.primary, width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 6 },
+  addBtnText: { color: '#ffffff', fontSize: 24, fontWeight: '700' },
   
   // Paramètre thème
   settingItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, marginBottom: 16 },
@@ -393,10 +393,10 @@ const createStyles = (colors: any) => StyleSheet.create({
   previewButtonText: { color: colors.surface, fontSize: 14, fontWeight: '600' },
   
   // Cards types
-  typeCard: { backgroundColor: colors.card, borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  typeCard: { backgroundColor: colors.card, borderRadius: 16, padding: 20, marginBottom: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, shadowColor: colors.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   typeCardContent: { flex: 1 },
-  typeName: { fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 4 },
-  typeDescription: { fontSize: 14, color: colors.textSecondary },
+  typeName: { fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 6, letterSpacing: -0.2 },
+  typeDescription: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   typeCardActions: { flexDirection: 'row', gap: 8 },
   editBtn: { backgroundColor: colors.warning, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   editBtnText: { fontSize: 14 },

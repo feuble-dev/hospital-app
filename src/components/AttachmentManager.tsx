@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, FlatList, Alert, TextInput, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, Pressable, FlatList, Alert, TextInput, Image, Modal, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Sharing from 'expo-sharing';
 import { query, run } from '../db';
 
 interface Attachment {
@@ -19,6 +20,8 @@ interface AttachmentManagerProps {
 export default function AttachmentManager({ cibleType, cibleId }: AttachmentManagerProps) {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [currentAttachment, setCurrentAttachment] = useState<Attachment | null>(null);
 
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -103,6 +106,17 @@ export default function AttachmentManager({ cibleType, cibleId }: AttachmentMana
         />
       )}
 
+      {viewerVisible && currentAttachment && (
+        <AttachmentViewer
+          attachment={currentAttachment}
+          visible={viewerVisible}
+          onClose={() => {
+            setViewerVisible(false);
+            setCurrentAttachment(null);
+          }}
+        />
+      )}
+
       <FlatList
         data={attachments}
         keyExtractor={(item) => String(item.piece_id)}
@@ -113,12 +127,8 @@ export default function AttachmentManager({ cibleType, cibleId }: AttachmentMana
               <Pressable 
                 style={styles.attachmentInfo}
                 onPress={() => {
-                  if (isImage) {
-                    // Ouvrir l'image en plein écran
-                    Alert.alert('Image', 'Fonctionnalité de visualisation à implémenter');
-                  } else {
-                    Alert.alert('Document', 'Fonctionnalité d\'ouverture de document à implémenter');
-                  }
+                  setCurrentAttachment(item);
+                  setViewerVisible(true);
                 }}
               >
                 <View style={styles.attachmentHeader}>
@@ -159,6 +169,168 @@ export default function AttachmentManager({ cibleType, cibleId }: AttachmentMana
   );
 }
 
+// Composant pour visualiser les pièces jointes
+function AttachmentViewer({ attachment, visible, onClose }: {
+  attachment: Attachment;
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const { width, height } = Dimensions.get('window');
+  const isImage = attachment.fichier_url.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+  const isPdf = attachment.fichier_url.match(/\.pdf$/i);
+
+  const openWithExternalApp = async () => {
+    try {
+      const isAvailable = await Sharing.isAvailableAsync();
+      
+      if (!isAvailable) {
+        Alert.alert(
+          'Non disponible',
+          'L\'ouverture de fichiers n\'est pas disponible sur cet appareil.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Ouvrir le fichier avec une app compatible
+      await Sharing.shareAsync(attachment.fichier_url, {
+        mimeType: isPdf ? 'application/pdf' : isImage ? 'image/*' : '*/*',
+        dialogTitle: 'Ouvrir avec',
+        UTI: isPdf ? 'com.adobe.pdf' : isImage ? 'public.image' : 'public.item',
+      });
+    } catch (error) {
+      console.error('Erreur ouverture:', error);
+      Alert.alert(
+        'Erreur',
+        'Impossible d\'ouvrir le fichier. Le fichier est peut-être introuvable.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const shareFile = async () => {
+    try {
+      const isAvailable = await Sharing.isAvailableAsync();
+      
+      if (!isAvailable) {
+        Alert.alert(
+          'Non disponible',
+          'Le partage de fichiers n\'est pas disponible sur cet appareil.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Partager le fichier (menu complet)
+      await Sharing.shareAsync(attachment.fichier_url, {
+        dialogTitle: 'Partager le fichier',
+      });
+    } catch (error) {
+      console.error('Erreur partage:', error);
+      Alert.alert(
+        'Erreur',
+        'Impossible de partager le fichier.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={false}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.viewerContainer}>
+        {/* Header */}
+        <View style={styles.viewerHeader}>
+          <View style={styles.viewerHeaderContent}>
+            <Text style={styles.viewerIcon}>{isImage ? '🖼️' : '📄'}</Text>
+            <View style={styles.viewerHeaderText}>
+              <Text style={styles.viewerTitle} numberOfLines={2}>
+                {attachment.description}
+              </Text>
+              <Text style={styles.viewerDate}>
+                Ajouté le {new Date(attachment.date_ajout).toLocaleDateString('fr-FR')}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity 
+            style={styles.closeButton} 
+            onPress={onClose}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content */}
+        <ScrollView 
+          contentContainerStyle={styles.viewerContent}
+          maximumZoomScale={3}
+          minimumZoomScale={1}
+        >
+          {isImage ? (
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: attachment.fichier_url }}
+                style={[styles.fullImage, { width: width, height: height - 120 }]}
+                resizeMode="contain"
+              />
+              <Text style={styles.imageHint}>🔍 Pincez pour zoomer</Text>
+            </View>
+          ) : isPdf ? (
+            <View style={styles.pdfContainer}>
+              <Text style={styles.pdfIcon}>📄</Text>
+              <Text style={styles.pdfTitle}>Document PDF</Text>
+              <Text style={styles.pdfDescription}>{attachment.description}</Text>
+              <Text style={styles.pdfHint}>
+                Pour ouvrir le PDF, utilisez une app externe de lecture de PDF
+              </Text>
+              <Pressable 
+                style={styles.openExternalButton}
+                onPress={openWithExternalApp}
+              >
+                <Text style={styles.openExternalText}>
+                  📱 Ouvrir avec une autre application
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.unknownContainer}>
+              <Text style={styles.unknownIcon}>📎</Text>
+              <Text style={styles.unknownTitle}>Fichier non prévisualisable</Text>
+              <Text style={styles.unknownDescription}>{attachment.description}</Text>
+              <Pressable 
+                style={[styles.openExternalButton, { marginTop: 24 }]}
+                onPress={openWithExternalApp}
+              >
+                <Text style={styles.openExternalText}>
+                  📱 Ouvrir avec une autre application
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Footer Actions */}
+        <View style={styles.viewerFooter}>
+          <Pressable 
+            style={[styles.footerButton, styles.footerButtonSecondary]} 
+            onPress={shareFile}
+          >
+            <Text style={styles.footerButtonText}>📤 Partager</Text>
+          </Pressable>
+          <Pressable style={styles.footerButton} onPress={onClose}>
+            <Text style={styles.footerButtonText}>🔙 Retour</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function AttachmentForm({ cibleType, cibleId, onSubmit, onCancel }: {
   cibleType: string;
   cibleId: number;
@@ -179,7 +351,7 @@ function AttachmentForm({ cibleType, cibleId, onSubmit, onCancel }: {
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: 'Images' as any,
+        mediaTypes: 'images' as any,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
@@ -354,13 +526,13 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   addBtn: { 
-    backgroundColor: '#3b82f6', 
+    backgroundColor: '#6366f1', 
     width: 32, 
     height: 32, 
     borderRadius: 16, 
     alignItems: 'center', 
     justifyContent: 'center',
-    shadowColor: '#3b82f6',
+    shadowColor: '#6366f1',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -684,5 +856,159 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
     fontStyle: 'italic'
-  }
+  },
+  
+  // Styles du viewer
+  viewerContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  viewerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingTop: 50,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+  },
+  viewerHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 16,
+  },
+  viewerIcon: {
+    fontSize: 28,
+    marginRight: 12,
+  },
+  viewerHeaderText: {
+    flex: 1,
+  },
+  viewerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  viewerDate: {
+    fontSize: 13,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
+  viewerContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageHint: {
+    fontSize: 14,
+    color: '#94a3b8',
+    fontWeight: '500',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  pdfContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  pdfIcon: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  pdfTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  pdfDescription: {
+    fontSize: 16,
+    color: '#cbd5e1',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  pdfHint: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  openExternalButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  openExternalText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  unknownContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  unknownIcon: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  unknownTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  unknownDescription: {
+    fontSize: 16,
+    color: '#cbd5e1',
+    textAlign: 'center',
+  },
+  viewerFooter: {
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingBottom: 32,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  footerButton: {
+    flex: 1,
+    backgroundColor: '#3b82f6',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  footerButtonSecondary: {
+    backgroundColor: '#475569',
+    shadowColor: '#475569',
+  },
+  footerButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
 });

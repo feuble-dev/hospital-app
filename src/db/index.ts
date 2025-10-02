@@ -5,9 +5,14 @@ let db: SQLite.SQLiteDatabase | null = null;
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
 
-export async function getDB() {
+export async function getDB(): Promise<SQLite.SQLiteDatabase> {
   if (!db) {
-    db = await SQLite.openDatabaseAsync('hospital.db');
+    try {
+      db = await SQLite.openDatabaseAsync('hospital.db');
+    } catch (error) {
+      console.error('Erreur ouverture DB:', error);
+      throw error;
+    }
   }
   return db;
 }
@@ -27,24 +32,34 @@ export async function ensureInitialized() {
 }
 
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-  await ensureInitialized();
-  const database = await getDB();
-  
   try {
-    const result = await database.getAllAsync(sql, params);
-    return result as T[];
+    await ensureInitialized();
+    const database = await getDB();
+    
+    // Avec expo-sqlite v16, utiliser getAllAsync directement
+    if (params && params.length > 0) {
+      const result = await database.getAllAsync<T>(sql, ...params);
+      return result;
+    } else {
+      const result = await database.getAllAsync<T>(sql);
+      return result;
+    }
   } catch (error) {
-    console.error('Erreur query:', error);
+    console.error('Erreur query:', sql, error);
     throw error;
   }
 }
 
 export async function run(sql: string, params: any[] = []): Promise<void> {
-  await ensureInitialized();
-  const database = await getDB();
-  
   try {
-    await database.runAsync(sql, params);
+    await ensureInitialized();
+    const database = await getDB();
+    
+    if (params && params.length > 0) {
+      await database.runAsync(sql, ...params);
+    } else {
+      await database.runAsync(sql);
+    }
   } catch (error) {
     console.error('Erreur run SQL:', sql, 'Params:', params, 'Error:', error);
     throw error;
@@ -129,9 +144,9 @@ async function seedDatabase() {
         (2, 2, '80')
       `);
 
-      await database.runAsync(`INSERT INTO consultations (patient_id, type_consultation_id, notes) VALUES
-        (1, 1, 'Contrôle annuel, RAS'),
-        (2, 2, 'Essoufflement à l''effort, ECG demandé')
+      await database.runAsync(`INSERT INTO consultations (patient_id, type_consultation_id, diagnostic, traitement) VALUES
+        (1, 1, 'État de santé général satisfaisant', 'Aucun traitement nécessaire'),
+        (2, 2, 'Hypertension artérielle légère', 'Ramipril 5mg 1x/jour, suivi dans 3 mois')
       `);
 
       await database.runAsync(`INSERT INTO examens (patient_id, type_examen_id, resultat, notes) VALUES

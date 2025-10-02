@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS consultations (
   patient_id INTEGER NOT NULL,
   type_consultation_id INTEGER NOT NULL,
   date_consultation TEXT DEFAULT (date('now')),
-  notes TEXT,
+  diagnostic TEXT,
+  traitement TEXT,
   FOREIGN KEY(patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
   FOREIGN KEY(type_consultation_id) REFERENCES types_consultations(type_consultation_id) ON DELETE CASCADE
 );
